@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pomodoro Timer — Free focus timer for deep work</title>
+<meta name="description" content="Free pomodoro timer online. Stay focused with 25-minute work sessions, short breaks, and long breaks. No sign-up, no downloads — just start the timer and get into deep work.">
+<meta name="keywords" content="pomodoro timer, focus timer, productivity timer, deep work timer, free pomodoro, online timer, study timer">
+<meta name="author" content="Micro Apps">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://molty-assistant.github.io/pomodoro-timer/">
+
+<!-- Open Graph -->
+<meta property="og:title" content="Pomodoro Timer — Free focus timer for deep work">
+<meta property="og:description" content="Free pomodoro timer online. Stay focused with 25-minute work sessions and timed breaks. No sign-up required.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://molty-assistant.github.io/pomodoro-timer/">
+<meta property="og:locale" content="en_GB">
+<meta property="og:site_name" content="Micro Apps">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Pomodoro Timer — Free focus timer for deep work">
+<meta name="twitter:description" content="Free pomodoro timer online. Stay focused with 25-minute work sessions and timed breaks. No sign-up required.">
+
+<!-- Favicon -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🍅</text></svg>">
+
+<!-- JSON-LD Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Pomodoro Timer",
+  "description": "Free pomodoro timer online. Stay focused with 25-minute work sessions, short breaks, and long breaks. No sign-up, no downloads.",
+  "url": "https://molty-assistant.github.io/pomodoro-timer/",
+  "applicationCategory": "ProductivityApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "GBP"
+  },
+  "author": {
+    "@type": "Organization",
+    "name": "Micro Apps",
+    "url": "https://molty-assistant.github.io/micro-apps-site/"
+  }
+}
+</script>
+
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0a0a0f;
+  --bg-card: #13131a;
+  --bg-hover: #1c1c27;
+  --accent: #7c3aed;
+  --accent-glow: rgba(124, 58, 237, 0.25);
+  --accent-dim: #6d28d9;
+  --text: #e4e4e7;
+  --text-dim: #a1a1aa;
+  --text-muted: #71717a;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --radius: 12px;
+  --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+html { font-size: 16px; }
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Header */
+header {
+  width: 100%;
+  max-width: 480px;
+  padding: 2rem 1.5rem 0;
+  text-align: center;
+}
+
+header h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+header p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.35rem;
+}
+
+/* Main */
+main {
+  flex: 1;
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+/* Mode Tabs */
+.mode-tabs {
+  display: flex;
+  gap: 0.35rem;
+  background: var(--bg-card);
+  padding: 0.25rem;
+  border-radius: 10px;
+  width: 100%;
+}
+
+.mode-tab {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all var(--transition);
+  font-family: inherit;
+}
+
+.mode-tab:hover { color: var(--text); background: var(--bg-hover); }
+.mode-tab.active {
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 2px 12px var(--accent-glow);
+}
+
+/* Timer Ring */
+.timer-container {
+  position: relative;
+  width: 280px;
+  height: 280px;
+  margin: 0.5rem 0;
+}
+
+.timer-svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.timer-track {
+  fill: none;
+  stroke: var(--bg-card);
+  stroke-width: 6;
+}
+
+.timer-progress {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 6;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s linear, stroke var(--transition);
+  filter: drop-shadow(0 0 8px var(--accent-glow));
+}
+
+.timer-display {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.timer-time {
+  font-size: 3.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+.timer-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-dim);
+  margin-top: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Session Dots */
+.session-dots {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.session-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 2px solid var(--text-muted);
+  transition: all var(--transition);
+}
+
+.session-dot.completed {
+  background: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+
+.session-dot.current {
+  border-color: var(--accent);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 var(--accent-glow); }
+  50% { box-shadow: 0 0 0 6px transparent; }
+}
+
+/* Quote */
+.quote {
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  font-style: italic;
+  min-height: 2.5em;
+  padding: 0 1rem;
+  transition: opacity var(--transition);
+  line-height: 1.5;
+}
+
+/* Controls */
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.btn {
+  border: none;
+  font-family: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius);
+  transition: all var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+  padding: 0.9rem 2.5rem;
+  font-size: 1rem;
+  box-shadow: 0 4px 20px var(--accent-glow);
+}
+
+.btn-primary:hover {
+  background: var(--accent-dim);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 24px var(--accent-glow);
+}
+
+.btn-primary:active { transform: translateY(0); }
+
+.btn-secondary {
+  background: var(--bg-card);
+  color: var(--text-dim);
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  border: 1px solid var(--bg-hover);
+}
+
+.btn-secondary:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.btn-icon {
+  background: var(--bg-card);
+  color: var(--text-dim);
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--bg-hover);
+}
+
+.btn-icon:hover {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+/* Keyboard Hints */
+.shortcuts-hint {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.shortcuts-hint kbd {
+  display: inline-block;
+  padding: 0.15em 0.45em;
+  background: var(--bg-card);
+  border: 1px solid var(--bg-hover);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.85em;
+  margin: 0 0.1em;
+}
+
+/* Settings Panel */
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--transition);
+}
+
+.settings-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+.settings-panel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 480px;
+  background: var(--bg-card);
+  border-radius: 20px 20px 0 0;
+  padding: 1.5rem;
+  z-index: 101;
+  transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.settings-overlay.open + .settings-panel,
+.settings-panel.open {
+  transform: translateX(-50%) translateY(0);
+}
+
+.settings-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+
+.settings-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+
+.settings-close {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0.25rem;
+  line-height: 1;
+}
+
+.settings-close:hover { color: var(--text); }
+
+.setting-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.85rem 0;
+  border-bottom: 1px solid var(--bg-hover);
+}
+
+.setting-row:last-child { border-bottom: none; }
+
+.setting-label {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.setting-control {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.setting-control button {
+  background: var(--bg-hover);
+  border: none;
+  color: var(--text);
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: inherit;
+  transition: background var(--transition);
+}
+
+.setting-control button:hover { background: var(--accent); }
+
+.setting-value {
+  font-size: 1rem;
+  font-weight: 600;
+  min-width: 2.5ch;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Notification Permission */
+.notification-bar {
+  width: 100%;
+  padding: 0.65rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  animation: fadeIn 0.3s ease;
+}
+
+.notification-bar button {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 0.9rem;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  white-space: nowrap;
+  transition: background var(--transition);
+}
+
+.notification-bar button:hover { background: var(--accent-dim); }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Footer */
+footer {
+  width: 100%;
+  max-width: 480px;
+  padding: 1.5rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+footer a {
+  color: var(--accent);
+  text-decoration: none;
+}
+
+footer a:hover { text-decoration: underline; }
+
+/* Session Counter */
+.session-counter {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 400px) {
+  .timer-container { width: 240px; height: 240px; }
+  .timer-time { font-size: 3rem; }
+  .btn-primary { padding: 0.8rem 2rem; }
+}
+
+@media (min-width: 600px) {
+  .timer-container { width: 320px; height: 320px; }
+  .timer-time { font-size: 4.2rem; }
+}
+
+/* State animations */
+.timer-container.running .timer-progress {
+  filter: drop-shadow(0 0 12px var(--accent-glow));
+}
+
+.timer-container.paused .timer-progress {
+  opacity: 0.5;
+}
+
+/* Break mode color shifts */
+body.break-mode { --accent: #34d399; --accent-glow: rgba(52, 211, 153, 0.25); --accent-dim: #059669; }
+body.long-break-mode { --accent: #60a5fa; --accent-glow: rgba(96, 165, 250, 0.25); --accent-dim: #2563eb; }
+
+/* Smooth body transition */
+body { transition: --accent 0.5s, --bg 0.5s; }
+
+/* Hidden */
+.hidden { display: none !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🍅 Pomodoro Timer</h1>
+  <p>Stay focused. Do deep work.</p>
+</header>
+
+<main>
+  <!-- Notification Permission Bar -->
+  <div class="notification-bar hidden" id="notifBar">
+    <span>🔔 Enable notifications to know when sessions end</span>
+    <button onclick="requestNotifPermission()">Enable</button>
+  </div>
+
+  <!-- Mode Tabs -->
+  <div class="mode-tabs">
+    <button class="mode-tab active" data-mode="work" onclick="switchMode('work')">Focus</button>
+    <button class="mode-tab" data-mode="break" onclick="switchMode('break')">Break</button>
+    <button class="mode-tab" data-mode="longBreak" onclick="switchMode('longBreak')">Long Break</button>
+  </div>
+
+  <!-- Timer -->
+  <div class="timer-container" id="timerContainer">
+    <svg class="timer-svg" viewBox="0 0 200 200">
+      <circle class="timer-track" cx="100" cy="100" r="90" />
+      <circle class="timer-progress" id="timerProgress" cx="100" cy="100" r="90"
+        stroke-dasharray="565.49" stroke-dashoffset="0" />
+    </svg>
+    <div class="timer-display">
+      <div class="timer-time" id="timerTime">25:00</div>
+      <div class="timer-label" id="timerLabel">Focus</div>
+    </div>
+  </div>
+
+  <!-- Session Dots -->
+  <div class="session-dots" id="sessionDots">
+    <div class="session-dot current"></div>
+    <div class="session-dot"></div>
+    <div class="session-dot"></div>
+    <div class="session-dot"></div>
+  </div>
+
+  <div class="session-counter" id="sessionCounter">Pomodoro #1</div>
+
+  <!-- Quote -->
+  <div class="quote" id="quote">"The secret of getting ahead is getting started."</div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <button class="btn btn-secondary" onclick="resetTimer()" title="Reset (R)">Reset</button>
+    <button class="btn btn-primary" id="startBtn" onclick="toggleTimer()" title="Start/Pause (Space)">
+      <span id="startBtnText">Start</span>
+    </button>
+    <button class="btn btn-secondary" onclick="skipSession()" title="Skip (S)">Skip</button>
+  </div>
+
+  <div class="shortcuts-hint">
+    <kbd>Space</kbd> start/pause &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>S</kbd> skip
+  </div>
+
+  <!-- Settings Button -->
+  <button class="btn btn-icon" onclick="openSettings()" title="Settings" aria-label="Settings">
+    <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+  </button>
+</main>
+
+<!-- Settings Overlay -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettings()"></div>
+<div class="settings-panel" id="settingsPanel">
+  <div class="settings-header">
+    <h2>⚙️ Settings</h2>
+    <button class="settings-close" onclick="closeSettings()">&times;</button>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">Focus duration</span>
+    <div class="setting-control">
+      <button onclick="adjustSetting('work', -5)">−</button>
+      <span class="setting-value" id="settingWork">25</span>
+      <button onclick="adjustSetting('work', 5)">+</button>
+      <span class="setting-label">min</span>
+    </div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">Short break</span>
+    <div class="setting-control">
+      <button onclick="adjustSetting('break', -1)">−</button>
+      <span class="setting-value" id="settingBreak">5</span>
+      <button onclick="adjustSetting('break', 1)">+</button>
+      <span class="setting-label">min</span>
+    </div>
+  </div>
+  <div class="setting-row">
+    <span class="setting-label">Long break</span>
+    <div class="setting-control">
+      <button onclick="adjustSetting('longBreak', -5)">−</button>
+      <span class="setting-value" id="settingLongBreak">15</span>
+      <button onclick="adjustSetting('longBreak', 5)">+</button>
+      <span class="setting-label">min</span>
+    </div>
+  </div>
+</div>
+
+<footer>
+  Pomodoro Timer — Part of <a href="https://molty-assistant.github.io/micro-apps-site/">Micro Apps</a>
+</footer>
+
+<script>
+// ─── State ───
+const CIRCUMFERENCE = 2 * Math.PI * 90; // ~565.49
+let settings = { work: 25, break: 5, longBreak: 15 };
+let state = {
+  mode: 'work',        // 'work' | 'break' | 'longBreak'
+  running: false,
+  timeLeft: 25 * 60,   // seconds
+  totalTime: 25 * 60,
+  session: 1,           // current pomodoro number
+  completedInCycle: 0,  // 0-3 completed in current set of 4
+  totalCompleted: 0,
+};
+let intervalId = null;
+
+// ─── Quotes ───
+const quotes = [
+  '"The secret of getting ahead is getting started." — Mark Twain',
+  '"Focus on being productive instead of busy." — Tim Ferriss',
+  '"It\'s not that I\'m so smart, it\'s just that I stay with problems longer." — Einstein',
+  '"Deep work is the ability to focus without distraction." — Cal Newport',
+  '"The successful warrior is the average man, with laser-like focus." — Bruce Lee',
+  '"Concentrate all your thoughts upon the work at hand." — Alexander Graham Bell',
+  '"Do the hard jobs first. The easy jobs will take care of themselves." — Dale Carnegie',
+  '"Productivity is never an accident. It is always the result of a commitment to excellence."',
+  '"You don\'t need more time. You need more focus."',
+  '"Small daily improvements lead to staggering long-term results."',
+  '"Start where you are. Use what you have. Do what you can." — Arthur Ashe',
+  '"Action is the foundational key to all success." — Pablo Picasso',
+  '"Amateurs sit and wait for inspiration. The rest of us just get up and go to work." — Stephen King',
+  '"Energy and persistence conquer all things." — Benjamin Franklin',
+  '"The only way to do great work is to love what you do." — Steve Jobs',
+];
+
+// ─── DOM ───
+const $time = document.getElementById('timerTime');
+const $label = document.getElementById('timerLabel');
+const $progress = document.getElementById('timerProgress');
+const $container = document.getElementById('timerContainer');
+const $startBtn = document.getElementById('startBtn');
+const $startBtnText = document.getElementById('startBtnText');
+const $sessionDots = document.getElementById('sessionDots');
+const $sessionCounter = document.getElementById('sessionCounter');
+const $quote = document.getElementById('quote');
+const $notifBar = document.getElementById('notifBar');
+const $settingsOverlay = document.getElementById('settingsOverlay');
+const $settingsPanel = document.getElementById('settingsPanel');
+
+// ─── Init ───
+function init() {
+  loadSettings();
+  loadState();
+  updateDisplay();
+  updateDots();
+  updateQuote();
+  checkNotificationPermission();
+
+  // Keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Don't trigger if typing in an input
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+    if (e.code === 'Space') {
+      e.preventDefault();
+      toggleTimer();
+    } else if (e.code === 'KeyR') {
+      resetTimer();
+    } else if (e.code === 'KeyS') {
+      skipSession();
+    }
+  });
+}
+
+// ─── Timer Core ───
+function toggleTimer() {
+  if (state.running) {
+    pauseTimer();
+  } else {
+    startTimer();
+  }
+}
+
+function startTimer() {
+  state.running = true;
+  $startBtnText.textContent = 'Pause';
+  $container.classList.add('running');
+  $container.classList.remove('paused');
+
+  intervalId = setInterval(() => {
+    state.timeLeft--;
+    if (state.timeLeft <= 0) {
+      state.timeLeft = 0;
+      completeSession();
+    }
+    updateDisplay();
+    saveState();
+  }, 1000);
+}
+
+function pauseTimer() {
+  state.running = false;
+  clearInterval(intervalId);
+  intervalId = null;
+  $startBtnText.textContent = 'Start';
+  $container.classList.remove('running');
+  $container.classList.add('paused');
+  saveState();
+}
+
+function resetTimer() {
+  pauseTimer();
+  $container.classList.remove('paused');
+  state.timeLeft = getModeTime(state.mode);
+  state.totalTime = state.timeLeft;
+  updateDisplay();
+  saveState();
+}
+
+function skipSession() {
+  pauseTimer();
+  $container.classList.remove('paused');
+  completeSession();
+}
+
+function completeSession() {
+  clearInterval(intervalId);
+  intervalId = null;
+  state.running = false;
+  $startBtnText.textContent = 'Start';
+  $container.classList.remove('running', 'paused');
+
+  // Play sound & notify
+  playSound(state.mode === 'work' ? 'complete' : 'break-end');
+  sendNotification();
+
+  if (state.mode === 'work') {
+    // Completed a work session
+    state.totalCompleted++;
+    state.completedInCycle++;
+
+    if (state.completedInCycle >= 4) {
+      // Long break after 4 pomodoros
+      state.completedInCycle = 0;
+      switchMode('longBreak');
+    } else {
+      switchMode('break');
+    }
+  } else {
+    // Completed a break — back to work
+    state.session = state.totalCompleted + 1;
+    switchMode('work');
+  }
+
+  updateQuote();
+  saveState();
+}
+
+// ─── Mode Switching ───
+function switchMode(mode) {
+  pauseTimer();
+  $container.classList.remove('paused');
+  state.mode = mode;
+  state.timeLeft = getModeTime(mode);
+  state.totalTime = state.timeLeft;
+
+  // Update body class for colour shifts
+  document.body.classList.remove('break-mode', 'long-break-mode');
+  if (mode === 'break') document.body.classList.add('break-mode');
+  if (mode === 'longBreak') document.body.classList.add('long-break-mode');
+
+  // Update tabs
+  document.querySelectorAll('.mode-tab').forEach(tab => {
+    tab.classList.toggle('active', tab.dataset.mode === mode);
+  });
+
+  updateDisplay();
+  updateDots();
+  saveState();
+}
+
+function getModeTime(mode) {
+  return settings[mode] * 60;
+}
+
+// ─── Display Updates ───
+function updateDisplay() {
+  const mins = Math.floor(state.timeLeft / 60);
+  const secs = state.timeLeft % 60;
+  const timeStr = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+  $time.textContent = timeStr;
+
+  const labels = { work: 'Focus', break: 'Break', longBreak: 'Long Break' };
+  $label.textContent = labels[state.mode];
+
+  // Progress ring
+  const progress = 1 - (state.timeLeft / state.totalTime);
+  const offset = CIRCUMFERENCE * (1 - progress);
+  $progress.style.strokeDashoffset = offset;
+
+  // Tab title
+  const modeLabel = labels[state.mode];
+  document.title = state.running
+    ? `${timeStr} — ${modeLabel}`
+    : 'Pomodoro Timer — Free focus timer for deep work';
+
+  // Session counter
+  $sessionCounter.textContent = `Pomodoro #${state.totalCompleted + (state.mode === 'work' ? 1 : 0)}`;
+}
+
+function updateDots() {
+  const dots = $sessionDots.children;
+  for (let i = 0; i < 4; i++) {
+    dots[i].classList.remove('completed', 'current');
+    if (i < state.completedInCycle) {
+      dots[i].classList.add('completed');
+    } else if (i === state.completedInCycle && state.mode === 'work') {
+      dots[i].classList.add('current');
+    }
+  }
+}
+
+function updateQuote() {
+  const idx = Math.floor(Math.random() * quotes.length);
+  $quote.style.opacity = '0';
+  setTimeout(() => {
+    $quote.textContent = quotes[idx];
+    $quote.style.opacity = '1';
+  }, 250);
+}
+
+// ─── Audio (Web Audio API) ───
+let audioCtx = null;
+
+function getAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+
+function playSound(type) {
+  try {
+    const ctx = getAudioContext();
+
+    if (type === 'complete') {
+      // Triumphant double beep for work complete
+      playTone(ctx, 880, 0, 0.15);
+      playTone(ctx, 1108.73, 0.18, 0.15);
+      playTone(ctx, 1318.51, 0.36, 0.25);
+    } else {
+      // Gentle single tone for break end
+      playTone(ctx, 660, 0, 0.2);
+      playTone(ctx, 880, 0.25, 0.3);
+    }
+  } catch (e) {
+    // Audio not available, skip silently
+  }
+}
+
+function playTone(ctx, freq, startTime, duration) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+
+  const now = ctx.currentTime + startTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.3, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+  osc.start(now);
+  osc.stop(now + duration);
+}
+
+// ─── Notifications ───
+function checkNotificationPermission() {
+  if ('Notification' in window && Notification.permission === 'default') {
+    $notifBar.classList.remove('hidden');
+  }
+}
+
+function requestNotifPermission() {
+  if ('Notification' in window) {
+    Notification.requestPermission().then(perm => {
+      $notifBar.classList.add('hidden');
+    });
+  }
+}
+
+function sendNotification() {
+  if ('Notification' in window && Notification.permission === 'granted') {
+    const labels = { work: 'Focus session', break: 'Short break', longBreak: 'Long break' };
+    const body = state.mode === 'work'
+      ? 'Great work! Time for a break. 🎉'
+      : 'Break\'s over. Let\'s focus! 💪';
+
+    new Notification('🍅 Pomodoro Timer', {
+      body: `${labels[state.mode]} complete! ${body}`,
+      icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🍅</text></svg>',
+    });
+  }
+}
+
+// ─── Settings ───
+function openSettings() {
+  $settingsOverlay.classList.add('open');
+  $settingsPanel.classList.add('open');
+  updateSettingsDisplay();
+}
+
+function closeSettings() {
+  $settingsOverlay.classList.remove('open');
+  $settingsPanel.classList.remove('open');
+}
+
+function adjustSetting(key, delta) {
+  const mins = { work: [5, 90], break: [1, 30], longBreak: [5, 60] };
+  const [min, max] = mins[key];
+  settings[key] = Math.max(min, Math.min(max, settings[key] + delta));
+  updateSettingsDisplay();
+
+  // If currently on this mode and not running, update timer
+  if (state.mode === key && !state.running) {
+    state.timeLeft = settings[key] * 60;
+    state.totalTime = state.timeLeft;
+    updateDisplay();
+  }
+
+  saveSettings();
+}
+
+function updateSettingsDisplay() {
+  document.getElementById('settingWork').textContent = settings.work;
+  document.getElementById('settingBreak').textContent = settings.break;
+  document.getElementById('settingLongBreak').textContent = settings.longBreak;
+}
+
+// ─── Persistence ───
+function saveSettings() {
+  try {
+    localStorage.setItem('pomo-settings', JSON.stringify(settings));
+  } catch (e) {}
+}
+
+function loadSettings() {
+  try {
+    const saved = localStorage.getItem('pomo-settings');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      settings = { ...settings, ...parsed };
+    }
+  } catch (e) {}
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('pomo-state', JSON.stringify({
+      totalCompleted: state.totalCompleted,
+      completedInCycle: state.completedInCycle,
+      session: state.session,
+    }));
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const saved = localStorage.getItem('pomo-state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      state.totalCompleted = parsed.totalCompleted || 0;
+      state.completedInCycle = parsed.completedInCycle || 0;
+      state.session = parsed.session || 1;
+    }
+  } catch (e) {}
+
+  // Ensure timeLeft matches current mode settings
+  state.timeLeft = getModeTime(state.mode);
+  state.totalTime = state.timeLeft;
+}
+
+// ─── Go ───
+init();
+</script>
+
+</body>
+</html>

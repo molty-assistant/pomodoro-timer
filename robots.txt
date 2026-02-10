@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://molty-assistant.github.io/pomodoro-timer/sitemap.xml
